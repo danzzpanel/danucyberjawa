@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>TikTok Downloader Premium</title>
+<style>
+  body { font-family: Arial; background:#f1f1f5; display:flex; justify-content:center; padding:40px; }
+  .box{ background:#fff; padding:30px; width:520px; border-radius:18px; box-shadow:0 6px 20px rgba(0,0,0,.12); text-align:center; }
+  h2{ margin-top:0; font-size:26px; }
+  input{ width:100%; padding:14px; border:1px solid #ccc; border-radius:10px; font-size:16px; }
+  button{ margin-top:12px; width:100%; padding:14px; background:#ff2c55; border:0; color:#fff; font-size:17px; border-radius:10px; cursor:pointer; }
+  button:hover{ opacity:.9; }
+  #result{ margin-top:25px; }
+  a.dl{ display:block; margin-top:15px; background:#1da1f2; padding:12px; border-radius:10px; color:#fff; text-decoration:none; font-size:16px; }
+  a.audio{ background:#10b981 !important; }
+  a.nowm{ background:#8b5cf6 !important; }
+  .thumb{ margin-top:18px; }
+  img{ width:100%; border-radius:12px; }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>TikTok Downloader Premium</h2>
+  <input id="url" placeholder="Tempel link TikTok di sini..." />
+  <button onclick="download()">Download</button>
+  <div id="status"></div>
+  <div id="result"></div>
+</div>
+
+<script>
+async function download(){
+    const videoUrl = document.getElementById("url").value;
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+
+    if(!videoUrl){ alert("Masukkan link dulu!"); return; }
+
+    status.innerText = "Mengambil data...";
+    result.innerHTML = "";
+
+    try{
+        // Memanggil server.js
+        const res = await fetch("http://localhost:3000/api/download", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ videoUrl })
+        });
+
+        const data = await res.json();
+        status.innerText = "";
+
+        console.log(data);
+
+        let video = data.video || data.videoUrl || data.downloadUrl || (data.result && data.result.video);
+        let nowm = data.nowm || (data.result && data.result.nowm);
+        let audio = data.audio || (data.music && data.music.playUrl);
+        let thumb = data.cover || data.thumbnail || (data.result && data.result.cover);
+
+        if(thumb){
+            result.innerHTML += `<div class='thumb'><img src='${thumb}'></div>`;
+        }
+
+        if(video){
+            result.innerHTML += `<a class='dl' href='${video}' target='_blank'>Download MP4 (Watermark)</a>`;
+        }
+
+        if(nowm){
+            result.innerHTML += `<a class='dl nowm' href='${nowm}' target='_blank'>Download MP4 (No Watermark)</a>`;
+        }
+
+        if(audio){
+            result.innerHTML += `<a class='dl audio' href='${audio}' target='_blank'>Download MP3 / Audio</a>`;
+        }
+
+        if(!video && !nowm && !audio){
+            result.innerHTML = "<p>Link download tidak ditemukan.</p>";
+        }
+
+    }catch(e){
+        status.innerText = "Error: " + e.message;
+    }
+}
+</script>
+
+</body>
+</html>
